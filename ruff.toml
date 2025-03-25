@@ -1,0 +1,52 @@
+exclude = ["**/migrations/*.py"]
+
+line-length = 120
+
+select = [
+    "E",
+    "W",
+    "F",
+    "UP",
+    "B",
+    "SIM",
+    "I",
+    "N",
+    "ASYNC",
+    "S",
+    "BLE",
+    "FBT",
+    "A",
+    "COM",
+    "C4",
+    "DTZ",
+    "DJ",
+    "EM",
+    "EXE",
+    "ISC",
+    "ICN",
+    "LOG",
+    "G",
+    "INP",
+    "PIE",
+    "T20",
+    "PYI",
+    "PT",
+    "RSE",
+    "RET",
+    "SLF",
+    "TID",
+    "ARG",
+    "PTH",
+    "PL",
+    "TRY",
+    "FLY",
+    "PERF",
+    "FURB",
+    "RUF",
+]
+ignore = ["COM812", "ISC001", "DJ008", "PLR0913", "PLR2004", "RUF012", "ARG002", "PT009", "N815"]
+
+[format]
+quote-style = "single"
+docstring-code-format = true
+
