@@ -5,6 +5,11 @@ from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
+def shorten_address(address: str, prefix: int = 6, suffix: int = 6) -> str:
+    if len(address) < (prefix + suffix + 2):
+        return address
+    return f"{address[:2 + prefix]}...{address[-suffix:]}"
+
 
 def send_email(to: str, subject: str, html: str) -> dict:
     """

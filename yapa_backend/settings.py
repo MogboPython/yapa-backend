@@ -11,9 +11,9 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 import logging
+from datetime import timedelta
 from pathlib import Path
 
-import pyrebase
 from django.core.management.utils import get_random_secret_key
 from environs import Env
 
@@ -36,28 +36,6 @@ SECRET_KEY = env.str('API_SECRET_KEY', default=get_random_secret_key())
 
 ALLOWED_HOSTS = ["*"]
 
-# Firebase settings
-try:
-    config = {
-        "apiKey": env.str("FIREBASE_API_KEY"),
-        "authDomain": env.str("FIREBASE_AUTH_DOMAIN"),
-        "databaseURL": env.str("FIREBASE_DATABASE_URL"),
-        "storageBucket": env.str("FIREBASE_STORAGE_BUCKET"),
-    }
-    firebase = pyrebase.initialize_app(config)
-    auth = firebase.auth()
-except KeyError as e:
-    logger.exception("missing firebase configuration key")
-    msg = f"Incomplete Firebase configuration: {e}"
-    raise ValueError(msg) from e
-except Exception as e:
-    logger.exception("firebase initialization error")
-    msg = f"firebase configuration failed: {e}"
-    raise RuntimeError(msg) from e
-
-# custom user model
-AUTH_USER_MODEL = "accounts.User"
-
 # Application definition
 
 DJANGO_APPS = [
@@ -75,6 +53,8 @@ THIRD_PARTY_APPS = [
     'corsheaders',
     'drf_yasg',
     'rest_framework',
+    'rest_framework_simplejwt',
+    'storages',
 ]
 
 LOCAL_APPS = ['accounts']
@@ -92,6 +72,26 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'yapa_backend.urls'
+
+AWS_ACCESS_KEY_ID = env.str('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = env.str('AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = env.str('AWS_STORAGE_BUCKET_NAME')
+AWS_S3_REGION_NAME = env.str('AWS_S3_REGION_NAME')
+AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
+AWS_S3_FILE_OVERWRITE = env.str('AWS_S3_FILE_OVERWRITE')
+
+STORAGES = {
+
+    # Media file (image) management
+    "default": {
+        "BACKEND": "storages.backends.s3boto3.S3StaticStorage",
+    },
+
+    # CSS and JS file management
+    "staticfiles": {
+        "BACKEND": "storages.backends.s3boto3.S3StaticStorage",
+    },
+}
 
 TEMPLATES = [
     {
@@ -114,14 +114,7 @@ WSGI_APPLICATION = 'yapa_backend.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
-
+DATABASES = {'default': env.dj_db_url('DATABASE_URL', default='postgres://mogbo:postgres@localhost:5432/test_db')}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -159,6 +152,9 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+MEDIA_URL = '/media/'
+MEDIA_ROOT = Path(BASE_DIR)/'media'
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
@@ -168,17 +164,38 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # DRF-YASG SETTINGS
 REST_FRAMEWORK = {
     'EXCEPTION_HANDLER': 'common.exceptions.custom_exception_handler',
-    'DEFAULT_AUTHENTICATION_CLASSES': ['accounts.firebase_auth.firebase_authentication.FirebaseAuthentication'],
+    'DEFAULT_AUTHENTICATION_CLASSES': ['rest_framework_simplejwt.authentication.JWTStatelessUserAuthentication'],
     'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.IsAuthenticated'],
     'DEFAULT_RENDERER_CLASSES': ['rest_framework.renderers.JSONRenderer'],
 }
 if DEBUG:
     REST_FRAMEWORK['DEFAULT_RENDERER_CLASSES'].append('rest_framework.renderers.BrowsableAPIRenderer')
 
+JWT_AUTH = {
+    'JWT_ALGORITHM': 'HS256',
+    'JWT_SECRET_KEY': SECRET_KEY,
+    'JWT_EXPIRATION_DELTA': timedelta(days=7),  # not safe. just for testing purposes
+    'JWT_REFRESH_EXPIRATION_DELTA': timedelta(days=14),  # not safe. just for testing purposes
+}
+
+# CORS configuration to restrict frontend access
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://localhost:8000",
+    'http://localhost:8080',
+    'http://localhost:3001',
+      # For local development
+]
+
+# CORS_ALLOW_ALL_ORIGINS = True
+
 # authentication backend
 AUTHENTICATION_BACKENDS = [
     'accounts.backends.model_backend.ModelBackend',
 ]
+
+# DRF-YASG SETTINGS
+SWAGGER_SETTINGS = {'SECURITY_DEFINITIONS': {'Bearer': {'type': 'apiKey', 'name': 'Authorization', 'in': 'header'}}}
 
 # LOGGING SETTINGS
 if not DEBUG:
@@ -206,6 +223,10 @@ if not DEBUG:
                 'level': 'ERROR',
                 'handlers': ['console'],
                 'propagate': False,
+            },
+            'djongo': {
+                'level': 'DEBUG',
+                'handlers': ['console'],
             },
         },
     }

@@ -20,3 +20,10 @@ python-decouple
 pyrebase4
 whitenoise
 drf-yasg
+djangorestframework-simplejwt
+eth-utils
+boto3
+django-storages
+dnspython
+dj-database-url
+psycopg2-binary
