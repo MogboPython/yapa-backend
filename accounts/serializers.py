@@ -8,6 +8,10 @@ class CreateAccountSerializer(serializers.ModelSerializer):
     username = serializers.CharField(required=False)
     profile_picture = serializers.ImageField(required=False)
 
+    class Meta:
+        model = Account
+        fields = ['address', 'username', 'profile_picture']
+
 class AccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = Account

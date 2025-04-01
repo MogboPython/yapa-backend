@@ -14,6 +14,7 @@ import logging
 from datetime import timedelta
 from pathlib import Path
 
+import supabase
 from django.core.management.utils import get_random_secret_key
 from environs import Env
 
@@ -72,6 +73,12 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'yapa_backend.urls'
+
+SUPABASE_URL = env.str('SUPABASE_URL')
+SUPABASE_KEY = env.str('SUPABASE_KEY')
+SUPABASE_BUCKET = "avatars"
+
+SUPERBASE_CLIENT = supabase.create_client(SUPABASE_URL, SUPABASE_KEY)
 
 AWS_ACCESS_KEY_ID = env.str('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = env.str('AWS_SECRET_ACCESS_KEY')
@@ -189,10 +196,11 @@ CORS_ALLOWED_ORIGINS = [
 
 # CORS_ALLOW_ALL_ORIGINS = True
 
+
 # authentication backend
-AUTHENTICATION_BACKENDS = [
-    'accounts.backends.model_backend.ModelBackend',
-]
+# AUTHENTICATION_BACKENDS = [
+#     'accounts.backends.model_backend.ModelBackend',
+# ]
 
 # DRF-YASG SETTINGS
 SWAGGER_SETTINGS = {'SECURITY_DEFINITIONS': {'Bearer': {'type': 'apiKey', 'name': 'Authorization', 'in': 'header'}}}

@@ -27,3 +27,4 @@ django-storages
 dnspython
 dj-database-url
 psycopg2-binary
+supabase

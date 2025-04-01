@@ -33,7 +33,7 @@ class EVMAddressField(models.CharField):
 
 class Account(UUIDModel, TimestampedModel, models.Model):
     address = EVMAddressField('address', unique=True, blank=False)
-    username = models.CharField('username', max_length=200, unique=True, blank=True)
+    username = models.CharField('username', max_length=200, blank=True, default="")
     profile_picture_url = models.URLField(
         'profile_picture_url',
         max_length=500,
